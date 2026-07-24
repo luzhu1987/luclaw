@@ -1,0 +1,421 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"falcosidekick"},"name":"falcosidekick","namespace":"falcosidekick"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"falcosidekick"}},"template":{"metadata":{"annotations":{"argocd.argoproj.io/sync-options":"SkipDryRunOnMissingResource=true"},"labels":{"app":"falcosidekick"}},"spec":{"containers":[{"envFrom":[{"configMapRef":{"name":"falcosidekick-config"}}],"image":"docker.io/falcosecurity/falcosidekick:latest","imagePullPolicy":"IfNotPresent","livenessProbe":{"httpGet":{"path":"/healthz","port":2801},"initialDelaySeconds":10},"name":"falcosidekick","ports":[{"containerPort":2801}],"readinessProbe":{"httpGet":{"path":"/healthz","port":2801}},"resources":{"limits":{"memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}]}}}}
+    creationTimestamp: "2026-07-24T13:45:31Z"
+    generation: 2
+    labels:
+      app: falcosidekick
+    name: falcosidekick
+    namespace: falcosidekick
+    resourceVersion: "6961"
+    uid: c5a7bdbb-209b-405d-83a1-13235c68f1b8
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: falcosidekick
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+          kubectl.kubernetes.io/restartedAt: "2026-07-24T22:10:22+08:00"
+        labels:
+          app: falcosidekick
+      spec:
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: falcosidekick-config
+          image: docker.io/falcosecurity/falcosidekick:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 2801
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: falcosidekick
+          ports:
+          - containerPort: 2801
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 2801
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-07-24T13:45:32Z"
+      lastUpdateTime: "2026-07-24T13:45:32Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-07-24T13:45:31Z"
+      lastUpdateTime: "2026-07-24T14:10:22Z"
+      message: ReplicaSet "falcosidekick-54464967b" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"falcosidekick-redis","namespace":"falcosidekick"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"falcosidekick-redis"}},"template":{"metadata":{"labels":{"app":"falcosidekick-redis"}},"spec":{"containers":[{"image":"docker.io/redis/redis-stack:latest","imagePullPolicy":"IfNotPresent","name":"redis-stack","ports":[{"containerPort":6379},{"containerPort":8001}],"resources":{"limits":{"memory":"1Gi"},"requests":{"cpu":"50m","memory":"256Mi"}}}]}}}}
+    creationTimestamp: "2026-07-24T13:54:23Z"
+    generation: 1
+    name: falcosidekick-redis
+    namespace: falcosidekick
+    resourceVersion: "6016"
+    uid: eb90feb5-61ba-431e-84f4-f337e5edc196
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: falcosidekick-redis
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: falcosidekick-redis
+      spec:
+        containers:
+        - image: docker.io/redis/redis-stack:latest
+          imagePullPolicy: IfNotPresent
+          name: redis-stack
+          ports:
+          - containerPort: 6379
+            protocol: TCP
+          - containerPort: 8001
+            protocol: TCP
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-07-24T13:54:25Z"
+      lastUpdateTime: "2026-07-24T13:54:25Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-07-24T13:54:23Z"
+      lastUpdateTime: "2026-07-24T13:54:25Z"
+      message: ReplicaSet "falcosidekick-redis-58b8df9965" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"falcosidekick-ui","namespace":"falcosidekick"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"falcosidekick-ui"}},"template":{"metadata":{"labels":{"app":"falcosidekick-ui"}},"spec":{"containers":[{"env":[{"name":"FALCOSIDEKICK_UI_REDIS_URL","value":"falcosidekick-redis:6379"},{"name":"FALCOSIDEKICK_UI_DISABLEAUTH","value":"true"}],"image":"docker.io/falcosecurity/falcosidekick-ui:latest","imagePullPolicy":"IfNotPresent","livenessProbe":{"httpGet":{"path":"/","port":2802},"initialDelaySeconds":15},"name":"falcosidekick-ui","ports":[{"containerPort":2802}],"readinessProbe":{"httpGet":{"path":"/","port":2802},"initialDelaySeconds":10},"resources":{"limits":{"memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}]}}}}
+    creationTimestamp: "2026-07-24T13:52:02Z"
+    generation: 1
+    name: falcosidekick-ui
+    namespace: falcosidekick
+    resourceVersion: "6086"
+    uid: 4fb57542-cc72-4ae8-88e7-d3f9537810e1
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: falcosidekick-ui
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: falcosidekick-ui
+      spec:
+        containers:
+        - env:
+          - name: FALCOSIDEKICK_UI_REDIS_URL
+            value: falcosidekick-redis:6379
+          - name: FALCOSIDEKICK_UI_DISABLEAUTH
+            value: "true"
+          image: docker.io/falcosecurity/falcosidekick-ui:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 2802
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: falcosidekick-ui
+          ports:
+          - containerPort: 2802
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 2802
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-07-24T13:55:08Z"
+      lastUpdateTime: "2026-07-24T13:55:08Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-07-24T13:52:02Z"
+      lastUpdateTime: "2026-07-24T13:55:08Z"
+      message: ReplicaSet "falcosidekick-ui-66795d669c" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"falcosidekick","namespace":"falcosidekick"},"spec":{"ports":[{"name":"http","port":2801,"targetPort":2801}],"selector":{"app":"falcosidekick"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-07-24T13:45:31Z"
+    labels:
+      app: falcosidekick
+    name: falcosidekick
+    namespace: falcosidekick
+    resourceVersion: "31602"
+    uid: d222d711-f45d-4f93-8713-395461f86d0f
+  spec:
+    clusterIP: 10.100.117.165
+    clusterIPs:
+    - 10.100.117.165
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 2801
+      protocol: TCP
+      targetPort: 2801
+    selector:
+      app: falcosidekick
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"falcosidekick-redis","namespace":"falcosidekick"},"spec":{"ports":[{"port":6379,"targetPort":6379}],"selector":{"app":"falcosidekick-redis"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-07-24T13:48:10Z"
+    name: falcosidekick-redis
+    namespace: falcosidekick
+    resourceVersion: "5552"
+    uid: acc3cb30-8571-4c35-abf0-b92e3aca1e32
+  spec:
+    clusterIP: 10.110.223.94
+    clusterIPs:
+    - 10.110.223.94
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 6379
+      protocol: TCP
+      targetPort: 6379
+    selector:
+      app: falcosidekick-redis
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"falcosidekick-ui","namespace":"falcosidekick"},"spec":{"ports":[{"port":2802,"targetPort":2802}],"selector":{"app":"falcosidekick-ui"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-07-24T13:45:42Z"
+    name: falcosidekick-ui
+    namespace: falcosidekick
+    resourceVersion: "5578"
+    uid: 77d828d2-8dec-4fbc-ae4f-fb17c328088f
+  spec:
+    clusterIP: 10.108.211.56
+    clusterIPs:
+    - 10.108.211.56
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 2802
+      protocol: TCP
+      targetPort: 2802
+    selector:
+      app: falcosidekick-ui
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  data:
+    CUSTOMFIELDS: nodename,k8s-ns-name,k8s-pod-name
+    DEBUG: "false"
+    FALCO_GO_SOCKET: /run/falco/falco.sock
+    WEBUI_URL: http://falcosidekick-ui:2802
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"CUSTOMFIELDS":"nodename,k8s-ns-name,k8s-pod-name","DEBUG":"false","FALCO_GO_SOCKET":"/run/falco/falco.sock","WEBUI_URL":"http://falcosidekick-ui:2802"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"falcosidekick-config","namespace":"falcosidekick"}}
+    creationTimestamp: "2026-07-24T13:45:31Z"
+    name: falcosidekick-config
+    namespace: falcosidekick
+    resourceVersion: "5318"
+    uid: 76c87621-a9e1-4086-aa44-1c5ea530ab47
+- apiVersion: v1
+  data:
+    REDIS_URL: redis://argocd-redis:6379
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"REDIS_URL":"redis://argocd-redis:6379"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"falcosidekick-ui-config","namespace":"falcosidekick"}}
+    creationTimestamp: "2026-07-24T13:45:42Z"
+    name: falcosidekick-ui-config
+    namespace: falcosidekick
+    resourceVersion: "5357"
+    uid: cbc8c09d-a2a0-4894-9e5f-ae76623bb03c
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBjCCAe6gAwIBAgIBATANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwptaW5p
+      a3ViZUNBMB4XDTI2MDcyMzEyMzU0NFoXDTM2MDcyMTEyMzU0NFowFTETMBEGA1UE
+      AxMKbWluaWt1YmVDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMJL
+      EeLcox54jqle91qEtawDI3XH5L7AgPqkg95VjQH1p6Ef3lfTBilNU5m+w8TAxUWr
+      HHfejY3Dqcz30E5n2oJMDf4zqMq8drixw6Nd4j0ZjbElnDEx6Dci8qkCep+Nu0bx
+      DeT7Mimm61IxuV8W6ECwROnpqQLPpgF22dq48w7nCGyN8rIGJ0m1Utw1cExu3mNV
+      WSpeb5wylowfYoXcua6tGLYNDq5BYUW2fvMT9DjA4b8ClKHU+72IW9Y834hdikxj
+      tktzQ/3FM3wW1UKigCP4fPm2gduW5Dyg8QoS5gFi+i0M0kDrFNzMW9CN/kW/Z5vg
+      ikiT5ENnPg8fo6nrJPcCAwEAAaNhMF8wDgYDVR0PAQH/BAQDAgKkMB0GA1UdJQQW
+      MBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQW
+      BBR2Ghz9gofbCTxQQe4ibFWGCrpfVjANBgkqhkiG9w0BAQsFAAOCAQEAM8ogAPLS
+      7DIFIgeWnNWAxYHyz577yZxkk2muzF3NFXwckBfFel/MNlausBWnqcT11/mKmcK7
+      BmP1ClPjOW0E8AU5UjN4RPvRTYMPFDupFYHzN0Rv7YB7flLJBGEbeWTx44vRZpc+
+      SJaoNqhg9Q/UdLCP5rO8N6oHRAE9EvvqBHXoiEMaNJYGeR2Oo5frXTLI7AOWgVer
+      04C3+33HOoxPPyh3YMQv7z5rngWUzsEDwTb5TTQavT0VDIczqc4Ye5s1ZuxRScZ2
+      OfnQwUvOBU6cGQ4XxWI63Kz/V/lG2hed2OuGOJQQNeWA2v3okeVgIYZDPC7xk0CH
+      vDoQ9VBB75P1ig==
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-07-24T13:45:30Z"
+    name: kube-root-ca.crt
+    namespace: falcosidekick
+    resourceVersion: "5316"
+    uid: f1bebecd-60a3-49ef-9b91-98c02281de48
+kind: List
+metadata:
