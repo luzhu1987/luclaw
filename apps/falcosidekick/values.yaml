@@ -1,0 +1,60 @@
+# falcosidekick Helm Chart
+# chart: https://github.com/falcosecurity/charts
+# 注意：官方 falcosidekick chart 路径为 falcosecurity/falcosidekick
+
+replicaCount: 1
+
+image:
+  repository: docker.m.daocloud.io/falcosecurity/falcosidekick
+  tag: latest
+  pullPolicy: IfNotPresent
+
+config:
+  # HTTP 输出到 falcosidekick 自身（falcosidekick 接收 Falco gRPC 输出）
+  # 注意：这里的 webui url 供 Dashboard 使用
+  webui:
+    url: "http://falcosidekick-ui:2802"
+  
+  # HTTP 输出到 Redis（已部署在 redis namespace）
+  redis:
+    host: "redis.redis.svc.cluster.local"
+    port: 6379
+    # password: ""
+
+  # Prometheus metrics（Prometheus 自动发现）
+  prometheus:
+    metricsPort: 2801
+
+  # 日志级别
+  logLevel: info
+
+# Service 配置（用于 ServiceMonitor 抓取 metrics）
+service:
+  type: ClusterIP
+  ports:
+    http:
+      port: 2801
+      targetPort: 2801
+      protocol: TCP
+
+# Pod annotations（Prometheus 发现需要）
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "2801"
+  prometheus.io/path: "/metrics"
+
+# labels（ServiceMonitor selector 匹配需要）
+podLabels:
+  app: falcosidekick
+
+serviceAccount:
+  create: true
+  name: falcosidekick
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

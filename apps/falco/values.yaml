@@ -1,0 +1,45 @@
+# Falco Helm Chart - 本地 K8s 集群配置
+# chart: https://falcosecurity.github.io/charts
+# targetRevision: 4.*
+
+image:
+  repository: docker.m.daocloud.io/falcosecurity/falco
+  tag: 0.41.0-debian
+  pullPolicy: IfNotPresent
+
+# eBPF 探针模式（生产环境推荐）
+driver:
+  kind: ebpf
+
+# gRPC 输出到 falcosidekick
+grpc:
+  enabled: true
+  bind_address: 0.0.0.0:5060
+grpc_output:
+  enabled: true
+
+# 日志配置
+logLevel: info
+
+# Falcosidekick 集成
+falcosidekick:
+  enabled: false  # 独立部署 falcosidekick，不通过 subchart
+
+# 资源配置
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# TTY 开启（调试用）
+tty: true
+
+# 容器仓库配置
+imagePullSecrets: []
+
+# Pod 安全
+podSecurityPolicy:
+  create: false

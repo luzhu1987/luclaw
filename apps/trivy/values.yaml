@@ -1,0 +1,30 @@
+# Trivy Operator Helm Chart
+# chart: aqua/security
+
+operator:
+  # 仅扫描镜像漏洞，不扫描 IaC
+  scanJobIsolation: none
+  vulnerabilityScanner:
+    enabled: true
+    scanOnlyCurrentNamespace: false
+    namespace: trivy-system
+  configAuditScanner:
+    enabled: false  # 本地环境禁用配置审计
+  exposedSecretScanner:
+    enabled: false
+
+trivy:
+  image:
+    repository: docker.m.daocloud.io/aquasec/trivy
+    tag: 0.56.0
+    pullPolicy: IfNotPresent
+  operator:
+    vulnerabilityScanner:
+      imageRef: docker.m.daocloud.io/aquasec/trivy:0.56.0
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi

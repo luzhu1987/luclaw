@@ -1,0 +1,69 @@
+# Keycloak Helm Chart (bitnami)
+# chart: https://bitnami.github.io/k8s-labs/keycloak
+
+image:
+  repository: docker.m.daocloud.io/quay.io/keycloak/keycloak
+  tag: 26.0.7
+  pullPolicy: IfNotPresent
+
+# 副本数
+replicaCount: 1
+
+# 认证配置
+auth:
+  createAdminUser: true
+  adminUser: admin
+  adminPassword: admin123
+
+# 生产模式
+production: false
+
+# 服务配置
+service:
+  type: ClusterIP
+  httpPort: 8080
+
+# 健康检查
+livenessProbe:
+  enabled: true
+  path: /realms/master
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  failureThreshold: 3
+readinessProbe:
+  enabled: true
+  path: /realms/master
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  failureThreshold: 3
+
+# 启动命令
+command:
+  - /opt/bitnami/scripts/keycloak/entrypoint.sh
+args:
+  - start-dev
+
+# 资源配置
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+# Ingress（本地环境禁用）
+ingress:
+  enabled: false
+
+# Pod annotations
+podAnnotations: {}
+
+# 持久化（本地环境禁用，使用 H2 内存数据库）
+persistence:
+  enabled: false
+
+# 服务账户
+serviceAccount:
+  create: true
+  name: keycloak

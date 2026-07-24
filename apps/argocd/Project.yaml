@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cluster-apps
+  namespace: argocd
+spec:
+  description: Cluster applications managed by GitOps
+  sourceRepos:
+    - "https://github.com/luzhu1987/luclaw.git"
+    - "https://raw.githubusercontent.com/luzhu1987/luclaw/*"
+    - "https://cdn.jsdelivr.net/gh/luzhu1987/luclaw@*"
+    - "https://falcosecurity.github.io/charts"
+    - "https://prometheus-community.github.io/helm-charts"
+    - "https://grafana.github.io/helm-charts"
+    - "https://bitnami.github.io/k8s-labs"
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange
+  roles:
+    - name: applications-admin
+      description: Manage all applications in the project
+      groups:
+        - system:authenticated
+      policies:
+        - "p, proj:cluster-apps:applications-admin:*, *, *, allow"
