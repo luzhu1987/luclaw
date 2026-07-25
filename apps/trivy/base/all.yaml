@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trivy-op-trivy-operator
+  namespace: trivy-system
+  labels:
+    helm.sh/chart: trivy-operator-0.34.0
+    app.kubernetes.io/name: trivy-operator
+    app.kubernetes.io/instance: trivy-op
+    app.kubernetes.io/version: "0.32.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 80
+      targetPort: metrics
+      protocol: TCP
+      appProtocol: TCP
+  selector:
+    app.kubernetes.io/name: trivy-operator
+    app.kubernetes.io/instance: trivy-op
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trivy-op-trivy-operator
+  namespace: trivy-system
+  labels:
+    helm.sh/chart: trivy-operator-0.34.0
+    app.kubernetes.io/name: trivy-operator
+    app.kubernetes.io/instance: trivy-op
+    app.kubernetes.io/version: "0.32.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: trivy-operator
+      app.kubernetes.io/instance: trivy-op
+  template:
+    metadata:
+      annotations:
+        checksum/config: 587a6f8a05213774f4fd81b7df4a1761b094ba08352757392db406035ad76546
+      labels:
+        app.kubernetes.io/name: trivy-operator
+        app.kubernetes.io/instance: trivy-op
+    spec:
+      serviceAccountName: trivy-op-trivy-operator
+      automountServiceAccountToken: true
+      containers:
+        - name: "trivy-operator"
+          image: "mirror.gcr.io/aquasec/trivy-operator:0.32.0"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OPERATOR_NAMESPACE
+              value: trivy-system
+            - name: OPERATOR_TARGET_NAMESPACES
+              value: ""
+            - name: OPERATOR_EXCLUDE_NAMESPACES
+              value: ""
+            - name: OPERATOR_TARGET_WORKLOADS
+              value: "pod,replicaset,replicationcontroller,statefulset,daemonset,cronjob,job"
+            - name: OPERATOR_SERVICE_ACCOUNT
+              value: "trivy-op-trivy-operator"
+          envFrom:
+            - configMapRef:
+                name: trivy-operator-config
+          ports:
+            - name: metrics
+              containerPort: 8080
+            - name: probes
+              containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /readyz/
+              port: probes
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz/
+              port: probes
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp
+              name: cache-policies
+              readOnly: false
+      volumes:
+        - emptyDir: {}
+          name: cache-policies
