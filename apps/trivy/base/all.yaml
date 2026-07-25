@@ -6,7 +6,7 @@ metadata:
   labels:
     helm.sh/chart: trivy-operator-0.34.0
     app.kubernetes.io/name: trivy-operator
-    app.kubernetes.io/instance: trivy-op
+    app.kubernetes.io/instance: trivy-operator
     app.kubernetes.io/version: "0.32.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -19,7 +19,7 @@ spec:
       appProtocol: TCP
   selector:
     app.kubernetes.io/name: trivy-operator
-    app.kubernetes.io/instance: trivy-op
+    app.kubernetes.io/instance: trivy-operator
   type: ClusterIP
 ---
 apiVersion: apps/v1
@@ -30,7 +30,7 @@ metadata:
   labels:
     helm.sh/chart: trivy-operator-0.34.0
     app.kubernetes.io/name: trivy-operator
-    app.kubernetes.io/instance: trivy-op
+    app.kubernetes.io/instance: trivy-operator
     app.kubernetes.io/version: "0.32.0"
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -40,20 +40,20 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: trivy-operator
-      app.kubernetes.io/instance: trivy-op
+      app.kubernetes.io/instance: trivy-operator
   template:
     metadata:
       annotations:
         checksum/config: 587a6f8a05213774f4fd81b7df4a1761b094ba08352757392db406035ad76546
       labels:
         app.kubernetes.io/name: trivy-operator
-        app.kubernetes.io/instance: trivy-op
+        app.kubernetes.io/instance: trivy-operator
     spec:
-      serviceAccountName: trivy-op-trivy-operator
+      serviceAccountName: trivy-operator
       automountServiceAccountToken: true
       containers:
         - name: "trivy-operator"
-          image: "mirror.gcr.io/aquasec/trivy-operator:0.32.0"
+          image: "mirror.gcr.io/docker.m.daocloud.io/aquasec/trivy-operator:0.32.0"
           imagePullPolicy: IfNotPresent
           env:
             - name: OPERATOR_NAMESPACE
