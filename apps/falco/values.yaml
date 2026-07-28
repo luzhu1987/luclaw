@@ -1,45 +1,42 @@
-# Falco Helm Chart - 本地 K8s 集群配置
-# chart: https://falcosecurity.github.io/charts
-# targetRevision: 4.*
+# Falco GitOps values (umbrella chart -> subchart "falco")
+# 顶层 falco: 块会整体作为 falcosecurity/falco subchart 的 .Values 根。
+falco:
+  # ---- 镜像（使用 DaoCloud 代理，绕过 docker.io 不稳定）----
+  image:
+    repository: docker.m.daocloud.io/falcosecurity/falco
+    tag: 0.41.0-debian
+    pullPolicy: IfNotPresent
 
-image:
-  repository: docker.m.daocloud.io/falcosecurity/falco
-  tag: 0.41.0-debian
-  pullPolicy: IfNotPresent
+  # ---- 驱动：eBPF 探针（minikube 场景）----
+  driver:
+    kind: ebpf
 
-# eBPF 探针模式（生产环境推荐）
-driver:
-  kind: ebpf
+  # ---- 资源限制 ----
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
 
-# gRPC 输出到 falcosidekick
-grpc:
-  enabled: true
-  bind_address: 0.0.0.0:5060
-grpc_output:
-  enabled: true
+  # ---- 不通过 subchart 部署 falcosidekick（独立部署）----
+  falcosidekick:
+    enabled: false
 
-# 日志配置
-logLevel: info
-
-# Falcosidekick 集成
-falcosidekick:
-  enabled: ture  # 独立部署 falcosidekick，不通过 subchart
-
-# 资源配置
-resources:
-  requests:
-    cpu: 100m
-    memory: 512Mi
-  limits:
-    cpu: 1000m
-    memory: 1Gi
-
-# TTY 开启（调试用）
-tty: true
-
-# 容器仓库配置
-imagePullSecrets: []
-
-# Pod 安全
-podSecurityPolicy:
-  create: false
+  # ---- 输出配置（嵌套在 falco: 内，对应 chart .Values.falco.*）----
+  falco:
+    # HTTP 输出 -> falcosidekick
+    http_output:
+      enabled: true
+      url: http://falcosidekick.falcosidekick.svc.cluster.local:2801/
+    # gRPC 输出（falcosidekick 也支持，双保险）
+    grpc_output:
+      enabled: true
+    grpc:
+      enabled: true
+      bind_address: 0.0.0.0:5060
+    # JSON 格式（falcosidekick 需要）
+    json_output: true
+    logLevel: info
+    tty: true

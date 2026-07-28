@@ -1,5 +1,0 @@
-# Kustomize overlay（当前为 base，直接引用 Helm chart）
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - https://github.com/falcosecurity/charts/kubectl-only/falco?ref=4.22.0  # falco 官方目录结构

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: falco
+description: Falco security monitoring (GitOps umbrella for falcosecurity/falco)
+type: application
+version: 0.1.0
+appVersion: "0.41.0"
+dependencies:
+  - name: falco
+    version: "4.22.0"
+    repository: "https://falcosecurity.github.io/charts"
