@@ -23,7 +23,7 @@ logLevel: info
 
 # Falcosidekick 集成
 falcosidekick:
-  enabled: false  # 独立部署 falcosidekick，不通过 subchart
+  enabled: ture  # 独立部署 falcosidekick，不通过 subchart
 
 # 资源配置
 resources:
