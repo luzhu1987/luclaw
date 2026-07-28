@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: ArgoCD
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/luzhu1987/luclaw.git
+    targetRevision: HEAD
+    path: apps/kafka/overlay
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
