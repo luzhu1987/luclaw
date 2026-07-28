@@ -24,6 +24,13 @@ falco:
   falcosidekick:
     enabled: false
 
+  # ---- 规则源切换到 ghcr.io oci（falcosecurity.github.io 在本环境不可达）----
+  falcoctl:
+    config:
+      indexes:
+        - name: falcosecurity
+          url: oci://ghcr.io/falcosecurity/falcoctl-artifact-index
+
   # ---- 输出配置（嵌套在 falco: 内，对应 chart .Values.falco.*）----
   falco:
     # HTTP 输出 -> falcosidekick

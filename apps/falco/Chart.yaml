@@ -7,4 +7,4 @@ appVersion: "0.41.0"
 dependencies:
   - name: falco
     version: "4.22.0"
-    repository: "https://falcosecurity.github.io/charts"
+    repository: "oci://ghcr.io/falcosecurity/charts"
