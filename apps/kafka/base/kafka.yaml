@@ -1,50 +1,16 @@
 ---
-# Kafka KRaft mode (Kafka 7.9.0+, no Zookeeper)
-# Cluster ID: Evj7k1AnToKcVP2+yFBGKA
+# Kafka KRaft mode - cp-kafka 7.9.0
+# CLUSTER_ID: mSGCpHrKTZK__DF7Al11jw
+#
+# Key discovery: cp-kafka's ensure script calls
+#   kafka-storage format --cluster-id=$CLUSTER_ID -c /etc/kafka/kafka.properties
+# but the KRaft config lives at /etc/kafka/kraft/server.properties.
+# Solution: main container entry command creates symlink first,
+# then execs the original /etc/confluent/docker/run.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kafka-scripts
-  namespace: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
-data:
-  init.sh: |
-    #!/bin/bash
-    set -e
-    CLUSTER_ID="Evj7k1AnToKcVP2+yFBGKA"
-    NODE_ID=${HOSTNAME##*-}
-    DATA_DIR="/var/lib/kafka/data"
-    echo "[init] Formatting Kafka storage node=$NODE_ID cluster=$CLUSTER_ID"
-    # Only format if not already formatted
-    if ! /opt/kafka/bin/kafka-storage.sh info -d $DATA_DIR &>/dev/null; then
-      /opt/kafka/bin/kafka-storage.sh format \
-        -t $CLUSTER_ID \
-        -c /opt/kafka/etc/kafka/kraft/server.properties \
-        --ignore-formatted \
-        --node-id $NODE_ID
-      echo "[init] Format complete for node=$NODE_ID"
-    else
-      echo "[init] Storage already formatted for node=$NODE_ID"
-    fi
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: kafka-secret
-  namespace: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
-type: Opaque
-stringData:
-  CLUSTER_ID: "Evj7k1AnToKcVP2+yFBGKA"
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -61,105 +27,69 @@ spec:
   selector:
     matchLabels:
       app: kafka
-  serviceName: kafka-headless
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 10Gi
   template:
     metadata:
       labels:
         app: kafka
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9092"
     spec:
+      enableServiceLinks: false
       terminationGracePeriodSeconds: 60
-      initContainers:
-        - name: init-kafka
-          image: docker.m.daocloud.io/confluentinc/cp-kafka:7.9.0
-          command: ["/bin/bash", "/scripts/init.sh"]
-          env:
-            - name: CLUSTER_ID
-              valueFrom:
-                secretKeyRef:
-                  name: kafka-secret
-                  key: CLUSTER_ID
-          securityContext:
-            runAsUser: 0
-          volumeMounts:
-            - name: kafka-scripts
-              mountPath: /scripts
-            - name: data
-              mountPath: /var/lib/kafka/data
       containers:
         - name: kafka
           image: docker.m.daocloud.io/confluentinc/cp-kafka:7.9.0
+          imagePullPolicy: IfNotPresent
+          # Override CMD to fix KRaft config path bug BEFORE running entrypoint
+          command:
+            - /bin/sh
+            - -euc
+            - |
+              echo "[fixup] KRaft config bug workaround..."
+              # K8s Service injects KAFKA_PORT env var; cp-kafka configure script
+              # treats KAFKA_PORT as deprecated and exits 1. Unset it.
+              unset KAFKA_PORT KAFKA_ZOOKEEPER_CONNECT
+              # KRaft mode needs node.id; derive from StatefulSet pod suffix (kafka-N -> N)
+              NODE_ID=$(echo "$POD_NAME" | rev | cut -d- -f1 | rev)
+              export KAFKA_NODE_ID="$NODE_ID"
+              echo "[fixup] KAFKA_NODE_ID=$KAFKA_NODE_ID (from POD_NAME=$POD_NAME)"
+              mkdir -p /etc/kafka
+              ln -nsf /etc/kafka/kraft/server.properties /etc/kafka/kafka.properties
+              echo "[fixup] Symlink: $(ls -la /etc/kafka/kafka.properties)"
+              echo "[fixup] Exec-ing original cp-kafka entry: $@"
+              exec /etc/confluent/docker/run "$@"
           ports:
-            - name: kafka-internal
-              containerPort: 9092
-            - name: kafka-ctrl
-              containerPort: 9093
-            - name: kafka-external
-              containerPort: 9094
+            - containerPort: 9092
+            - containerPort: 9093
           env:
-            # KRaft config
+            - name: CLUSTER_ID
+              value: "mSGCpHrKTZK__DF7Al11jw"
             - name: KAFKA_PROCESS_ROLES
               value: "broker,controller"
-            - name: KAFKA_NODE_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['controller.kubernetes.io/pod-name']
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: CLUSTER_ID
-              valueFrom:
-                secretKeyRef:
-                  name: kafka-secret
-                  key: CLUSTER_ID
-            # Listeners
             - name: KAFKA_LISTENERS
-              value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094"
+              value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://$(POD_NAME).kafka-headless.$(POD_NAMESPACE).svc.cluster.local:9092,EXTERNAL://$(HOST_IP):9094"
+              value: "PLAINTEXT://$(POD_NAME).kafka-headless:9092,CONTROLLER://$(POD_NAME).kafka-headless:9093"
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: "PLAINTEXT"
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "0@kafka-0.kafka-headless.kafka.svc.cluster.local:9093,1@kafka-1.kafka-headless.kafka.svc.cluster.local:9093,2@kafka-2.kafka-headless.kafka.svc.cluster.local:9093"
+              value: "0@kafka-0.kafka-headless:9093,1@kafka-1.kafka-headless:9093,2@kafka-2.kafka-headless:9093"
             - name: KAFKA_LOG_DIRS
               value: "/var/lib/kafka/data"
-            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
-              value: "true"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "3"
             - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
               value: "2"
             - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
               value: "3"
-            - name: KAFKA_LOG_RETENTION_BYTES
-              value: "1073741824"
-            - name: KAFKA_LOG_RETENTION_HOURS
-              value: "168"
-            - name: KAFKA_JMX_PORT
-              value: "9999"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
           resources:
             requests:
               cpu: "500m"
@@ -167,79 +97,56 @@ spec:
             limits:
               cpu: "2000m"
               memory: "4Gi"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           volumeMounts:
-            - name: data
+            - name: kafka-data
               mountPath: /var/lib/kafka/data
           livenessProbe:
             tcpSocket:
               port: 9092
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            failureThreshold: 5
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            failureThreshold: 8
           readinessProbe:
             tcpSocket:
               port: 9092
-            initialDelaySeconds: 15
-            periodSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
       volumes:
-        - name: kafka-scripts
-          configMap:
-            name: kafka-scripts
-            defaultMode: 0755
+        - name: kafka-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: kafka
   namespace: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
 spec:
   type: ClusterIP
   selector:
     app: kafka
   ports:
-    - name: kafka-internal
-      port: 9092
+    - port: 9092
       targetPort: 9092
-    - name: kafka-external
-      port: 9094
-      targetPort: 9094
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: kafka-headless
   namespace: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
 spec:
   type: ClusterIP
   clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     app: kafka
   ports:
-    - name: kafka-internal
+    - name: kafka
       port: 9092
       targetPort: 9092
-    - name: kafka-external
-      port: 9094
-      targetPort: 9094
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kafka-external
-  namespace: kafka
-  labels:
-    app.kubernetes.io/managed-by: ArgoCD
-spec:
-  type: NodePort
-  selector:
-    app: kafka
-  ports:
-    - name: kafka-external
-      port: 9094
-      targetPort: 9094
-      nodePort: 30092
+    - name: controller
+      port: 9093
+      targetPort: 9093
